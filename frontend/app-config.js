@@ -2,7 +2,7 @@
 // Update `backendUrl` before deploying to Vercel so the client knows where the Socket.IO server lives.
 (function configureApp() {
   const defaults = {
-    backendUrl: "drawboardcanvasserver.vercel.app",
+    backendUrl: "http://localhost:3000",
   };
 
   if (!window.APP_CONFIG || typeof window.APP_CONFIG !== "object") {
