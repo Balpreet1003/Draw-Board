@@ -53,6 +53,7 @@ export function initCanvas(canvas, handlers = {}) {
 export function setTool(nextTool) {
   tool = nextTool === "eraser" ? "eraser" : "brush";
 }
+
 export function setColor(nextColor) {
   strokeColor = nextColor;
 }
@@ -158,7 +159,6 @@ export async function exportCanvas(format = "png", quality = 0.92, history = nul
   const mime = fmt === "jpeg" || fmt === "jpg" ? "image/jpeg" : "image/png";
   // toDataURL may be synchronous; convert to blob for consistent download handling
   const dataUrl = canvasEl.toDataURL(mime, Number(quality) || 0.92);
-  // convert dataURL to blob
   const res = await fetch(dataUrl);
   const blob = await res.blob();
   return { type: mime, data: blob };
@@ -174,37 +174,33 @@ function generateSVG(history = []) {
   const parts = [];
   parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`);
-  // background
   parts.push(`<rect width="100%" height="100%" fill="${escapeXml(bg)}" />`);
 
-  // render strokes
   history.forEach((op) => {
     if (!op || !Array.isArray(op.points) || op.points.length < 2) return;
-    const stroke = escapeXml(String(op.strokeId || ""));
     const color = escapeXml(String(op.color || "#000000"));
     const w = Number(op.width) || 1;
     const toolType = op.tool === "eraser" ? "eraser" : "brush";
 
-    // Build path using quadratic segments similar to canvas rendering
-    const p = [];
+    const pathParts = [];
     const pts = op.points;
-    p.push(`M ${pts[0].x} ${pts[0].y}`);
+    pathParts.push(`M ${pts[0].x} ${pts[0].y}`);
     for (let i = 1; i < pts.length; i += 1) {
       const prev = pts[i - 1];
       const cur = pts[i];
       const midX = (prev.x + cur.x) / 2;
       const midY = (prev.y + cur.y) / 2;
-      p.push(`Q ${prev.x} ${prev.y} ${midX} ${midY}`);
+      pathParts.push(`Q ${prev.x} ${prev.y} ${midX} ${midY}`);
     }
     const last = pts[pts.length - 1];
-    p.push(`L ${last.x} ${last.y}`);
+    pathParts.push(`L ${last.x} ${last.y}`);
 
     const strokeColor = toolType === "eraser" ? bg : color;
-    parts.push(`<path d="${p.join(" ")}" stroke="${strokeColor}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`);
+    parts.push(`<path d="${pathParts.join(" ")}" stroke="${strokeColor}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`);
   });
 
   parts.push(`</svg>`);
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 function escapeXml(str) {
@@ -212,7 +208,7 @@ function escapeXml(str) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 }
 
@@ -281,7 +277,6 @@ function attachPointerHandlers() {
       }
     }
     isDrawing = false;
-    // Final render to preview then commit to main canvas
     flushFrame();
     if (completeCallback && points.length > 1) {
       const op = {
@@ -291,11 +286,9 @@ function attachPointerHandlers() {
         width: strokeWidth,
         points: [...points],
       };
-      // commit stroke to base canvas
       renderStroke(op);
       completeCallback(op);
     }
-    // clear preview
     if (previewCtx && previewCanvasEl) {
       previewCtx.clearRect(0, 0, previewCanvasEl.width, previewCanvasEl.height);
     }
@@ -318,7 +311,6 @@ function scheduleFrame() {
 function flushFrame() {
   rafHandle = null;
   if (!previewCtx || points.length < 2) return;
-  // Draw the current in-progress stroke onto the preview layer using full smoothing
   previewCtx.save();
   applyStrokeStyleToContext(previewCtx, tool, tool === "eraser" ? backgroundFill : strokeColor, strokeWidth);
   previewCtx.beginPath();
@@ -382,8 +374,8 @@ function applyStrokeStyleToContext(context, strokeTool, color, width) {
 
 function getRelativePosition(event) {
   const rect = canvasEl.getBoundingClientRect();
-  const x = (event.clientX - rect.left);
-  const y = (event.clientY - rect.top);
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { x, y };
 }

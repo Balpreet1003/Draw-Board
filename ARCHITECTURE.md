@@ -2,7 +2,12 @@
 
 ## Runtime Overview
 
-The system consists of a vanilla JS client that renders onto an HTML5 canvas and a Node.js server that brokers collaboration state via Socket.IO. Clients are authoritative over in-progress strokes, while the server owns the final operation history and cursor presence for every connected user.
+The application is now hosted as two independent services:
+
+- **Frontend (`frontend/`)** – vanilla ES modules rendered in the browser and deployed as static assets (Vercel).
+- **Backend (`server/`)** – Node.js + Socket.IO service deployed to Render.
+
+The browser client renders onto an HTML5 canvas and streams drawing events to the backend. Clients are authoritative over in-progress strokes, while the server owns the final operation history and cursor presence for every connected user.
 
 ### Data Flow Diagram
 
@@ -37,9 +42,9 @@ The system consists of a vanilla JS client that renders onto an HTML5 canvas and
 
 ## Client Modules
 
-- `canvas.js` – Owns the `<canvas>` context, translates pointer events into smoothed brush paths, and exposes pure drawing helpers for remote playback.
-- `websocket.js` – Wraps the Socket.IO client, serialises outgoing messages, throttles cursor broadcasts, and forwards server events to consumers.
-- `main.js` – Coordinates UI controls, binds the canvas callbacks to websocket emitters, keeps a local history cache for fast redraws, and renders remote cursors & user presence.
+- `frontend/canvas.js` – Owns the `<canvas>` context, translates pointer events into smoothed brush paths, and exposes pure drawing helpers for remote playback.
+- `frontend/websocket.js` – Wraps the Socket.IO client (loaded from the official CDN), resolves the backend URL from `app-config.js`, serialises outgoing messages, throttles cursor broadcasts, and forwards server events to consumers.
+- `frontend/main.js` – Coordinates UI controls, binds the canvas callbacks to websocket emitters, keeps a local history cache for fast redraws, and renders remote cursors & user presence.
 
 ## WebSocket Protocol
 

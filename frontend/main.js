@@ -46,7 +46,6 @@ let strokeWidthValue = null;
 let userCountEl = null;
 
 window.addEventListener("DOMContentLoaded", () => {
-  // ensure we have a room (sheet) id in the URL so multiple users can join the same sheet
   const sheetId = ensureRoomInUrl();
   const sheetIdEl = document.getElementById("sheet-id-value");
   if (sheetIdEl) {
@@ -57,12 +56,10 @@ window.addEventListener("DOMContentLoaded", () => {
     copySheetBtn.addEventListener("click", async () => {
       const fullUrl = window.location.href;
       const previousText = copySheetBtn.textContent;
-      // Try navigator.clipboard first
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(fullUrl);
         } else {
-          // Fallback: use a temporary textarea and execCommand
           const ta = document.createElement("textarea");
           ta.value = fullUrl;
           ta.style.position = "fixed";
@@ -79,7 +76,6 @@ window.addEventListener("DOMContentLoaded", () => {
           copySheetBtn.disabled = false;
         }, 1800);
       } catch (err) {
-        // show a brief failure state
         copySheetBtn.textContent = "Failed";
         copySheetBtn.disabled = true;
         setTimeout(() => {
@@ -145,58 +141,59 @@ window.addEventListener("DOMContentLoaded", () => {
   setColorPreview(initialColor);
   setStrokeWidthLabel(initialWidth);
 
-  const socket = initWebsocket({
-    onConnect: (id) => {
-      localSocketId = id;
-    },
-    onDrawSegment: (segment) => {
-      if (segment?.strokeId?.startsWith(localSocketId)) return;
-      drawRemoteSegment(segment);
-    },
-    onStrokeComplete: (operation) => {
-      if (!operation) return;
-      const index = historyCache.findIndex((item) => item.strokeId === operation.strokeId);
-      if (index >= 0) {
-        historyCache[index] = operation;
-      } else {
-        historyCache.push(operation);
-      }
-    },
-    onHistoryUpdate: (history) => {
-      historyCache = Array.isArray(history) ? history : [];
-      redrawCanvas(historyCache);
-    },
-    onUserListUpdate: (users) => {
-      renderUserList(usersContainer, users, localSocketId);
-      updateLocalUserProfile(users);
-    },
-    onCursorUpdate: (cursors) => {
-      renderRemoteCursors(cursorLayer, cursors, localSocketId);
-    },
-    onDisplayNameResult: (payload) => {
-      handleDisplayNameResult(payload);
-    },
-    onCanvasCleared: (payload) => {
-      const announcedBackground = typeof payload?.background === "string" ? payload.background.trim() : "";
-      const nextBackground = announcedBackground || getCanvasBackgroundColor(canvasEl);
-      currentCanvasBackground = applyCanvasBackground(canvasEl, nextBackground);
-      historyCache = [];
-      clearCanvas();
-      if (resetPending) {
-        resetPending = false;
-        if (resetButton) {
-          resetButton.disabled = false;
+  const socket = initWebsocket(
+    {
+      onConnect: (id) => {
+        localSocketId = id;
+      },
+      onDrawSegment: (segment) => {
+        if (segment?.strokeId?.startsWith(localSocketId)) return;
+        drawRemoteSegment(segment);
+      },
+      onStrokeComplete: (operation) => {
+        if (!operation) return;
+        const index = historyCache.findIndex((item) => item.strokeId === operation.strokeId);
+        if (index >= 0) {
+          historyCache[index] = operation;
+        } else {
+          historyCache.push(operation);
         }
-      }
+      },
+      onHistoryUpdate: (history) => {
+        historyCache = Array.isArray(history) ? history : [];
+        redrawCanvas(historyCache);
+      },
+      onUserListUpdate: (users) => {
+        renderUserList(usersContainer, users, localSocketId);
+        updateLocalUserProfile(users);
+      },
+      onCursorUpdate: (cursors) => {
+        renderRemoteCursors(cursorLayer, cursors, localSocketId);
+      },
+      onDisplayNameResult: (payload) => {
+        handleDisplayNameResult(payload);
+      },
+      onCanvasCleared: (payload) => {
+        const announcedBackground = typeof payload?.background === "string" ? payload.background.trim() : "";
+        const nextBackground = announcedBackground || getCanvasBackgroundColor(canvasEl);
+        currentCanvasBackground = applyCanvasBackground(canvasEl, nextBackground);
+        historyCache = [];
+        clearCanvas();
+        if (resetPending) {
+          resetPending = false;
+          if (resetButton) {
+            resetButton.disabled = false;
+          }
+        }
+      },
     },
-  }, sheetId);
-  
+    sheetId
+  );
 
   if (!socket) {
     return;
   }
 
-  // Export controls
   const exportFormatSelect = document.getElementById("export-format");
   const downloadBtn = document.getElementById("download-button");
   const exportFeedback = document.getElementById("export-feedback");
@@ -227,7 +224,6 @@ window.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           if (exportFeedback) exportFeedback.textContent = previous;
         }, 1800);
-        // eslint-disable-next-line no-console
         console.error("Export failed", err);
       }
     });
@@ -271,9 +267,9 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-  const previousHistory = historyCache;
-  const desiredBackground = getCanvasBackgroundColor(canvasEl);
-  currentCanvasBackground = applyCanvasBackground(canvasEl, desiredBackground);
+    const previousHistory = historyCache;
+    const desiredBackground = getCanvasBackgroundColor(canvasEl);
+    currentCanvasBackground = applyCanvasBackground(canvasEl, desiredBackground);
     clearCanvas();
     historyCache = [];
     resetPending = true;
@@ -357,7 +353,6 @@ function renderUserList(container, users, localId) {
   });
 }
 
-// Helpers: generate a short room id and ensure it's present in the URL
 function generateId(length = 6) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let out = "";
@@ -375,12 +370,10 @@ function ensureRoomInUrl() {
       room = generateId(6);
       params.set("room", room);
       const newUrl = `${window.location.pathname}?${params.toString()}`;
-      // Replace history so the user doesn't get spammed when navigating
       history.replaceState(null, "", newUrl);
     }
     return room;
   } catch (e) {
-    // Fallback: if URL APIs aren't available, return a generated id
     return generateId(6);
   }
 }
@@ -416,7 +409,6 @@ function renderRemoteCursors(layer, cursors, localId) {
       dot.style.backgroundColor = cursor.color || "#ff6b6b";
       label.textContent = cursor.label || "Collaborator";
       label.style.borderColor = cursor.color || "#ff6b6b";
-      // Always use black for cursor label text for better readability
       label.style.color = cursor.color || "#000000";
     });
   }
@@ -627,7 +619,8 @@ function getCanvasBackgroundColor(canvas) {
 function handleDisplayNameResult(payload) {
   if (!payload) return;
   if (payload.ok) {
-    const label = payload.label || pendingDisplayName || currentDisplayName || buildFallbackLabel(localSocketId);
+    const label =
+      payload.label || pendingDisplayName || currentDisplayName || buildFallbackLabel(localSocketId);
     const shouldAnnounce = awaitingNameConfirmation || (pendingDisplayName && label !== currentDisplayName);
     applyDisplayNameSuccess(label, shouldAnnounce);
   } else if (payload.error) {

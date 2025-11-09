@@ -1,4 +1,4 @@
-import { io } from "/vendor/socket.io.esm.min.js";
+import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
 
 let socket;
 let handlers = {
@@ -20,13 +20,13 @@ let pendingNameUpdate = null;
 export function initWebsocket(customHandlers = {}, roomId = null) {
   handlers = { ...handlers, ...customHandlers };
 
+  const baseUrl = resolveBackendUrl();
   const opts = { transports: ["websocket"] };
   if (roomId) {
-    // pass room id to server via the auth payload so the server can place sockets in the correct room
     opts.auth = { room: String(roomId) };
   }
 
-  socket = io(opts);
+  socket = io(baseUrl, opts);
 
   socket.on("connect", () => {
     handlers.onConnect?.(socket.id);
@@ -182,4 +182,32 @@ export function updateDisplayName(name) {
       }
     });
   });
+}
+
+function resolveBackendUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get("backend");
+  if (typeof fromQuery === "string" && fromQuery.trim()) {
+    return sanitizeUrl(fromQuery.trim());
+  }
+
+  const configUrl = window.APP_CONFIG?.backendUrl;
+  if (typeof configUrl === "string" && configUrl.trim()) {
+    return sanitizeUrl(configUrl.trim());
+  }
+
+  return sanitizeUrl(window.location.origin);
+}
+
+function sanitizeUrl(value) {
+  if (!value) {
+    return window.location.origin;
+  }
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.origin;
+  } catch (error) {
+    console.warn("Invalid backendUrl provided. Falling back to current origin.");
+    return window.location.origin;
+  }
 }

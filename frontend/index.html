@@ -52,13 +52,13 @@
                 </button>
               </div>
             </section>
-            
+
             <section class="profile-card control-card" aria-label="Export">
               <h2>Export</h2>
               <div class="history-actions">
                 <label for="export-format" class="profile-label" style="display: flex; align-items: center;">Format</label>
                 <div class="ghost-button">
-                  <select id="export-format"  aria-label="Export format">
+                  <select id="export-format" aria-label="Export format">
                     <option value="png">PNG</option>
                     <option value="jpeg">JPEG</option>
                     <option value="svg">SVG</option>
@@ -105,7 +105,7 @@
               <section class="sheet-id-container" style="gap: 2px;" aria-label="Sheet information">
                 <div>
                   <div class="profile-label" aria-label="Sheet id">
-                    Sheet ID: 
+                    Sheet ID:
                   </div>
                   <strong id="sheet-id-value" class="name-form">—</strong>
                 </div>
@@ -115,10 +115,10 @@
               </section>
 
               <section class="profile-card presence-card" aria-label="Collaborators">
-                  <div class="presence-meta" aria-label="Collaborator count">
-                    <span class="user-count-pill"><span id="user-count">0</span> online</span>
-                  </div>
-                  <div id="online-users" class="user-list"></div>
+                <div class="presence-meta" aria-label="Collaborator count">
+                  <span class="user-count-pill"><span id="user-count">0</span> online</span>
+                </div>
+                <div id="online-users" class="user-list"></div>
               </section>
             </div>
           </aside>
@@ -126,6 +126,7 @@
       </div>
     </div>
 
+    <script src="./app-config.js"></script>
     <script type="module" src="./main.js"></script>
   </body>
 </html>

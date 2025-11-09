@@ -449,7 +449,7 @@ body {
   white-space: nowrap;
 }
 
-.sheet-id-container{
+.sheet-id-container {
   display: flex;
   justify-content: space-between;
   gap: 0.9rem;
@@ -457,13 +457,12 @@ body {
   border: 1px solid var(--border-soft);
   min-width: 0;
   width: 100%;
-  gap: 1rem;
   background: var(--surface);
   box-shadow: var(--shadow-soft);
   border-radius: 26px;
 }
 
-.copy-sheet-id-btn{
+.copy-sheet-id-btn {
   padding: 0.55rem 1.05rem;
   border-radius: 16px;
   border: 1px solid var(--border-soft);
@@ -483,16 +482,14 @@ body {
   cursor: not-allowed;
 }
 
-.export-controls{
+.export-controls {
   width: 100%;
   display: flex;
-  justify-items:  between;
   justify-content: space-between;
   align-items: center;
-  /* gap: 1rem; */
 }
 
-.select-wrapper{
+.select-wrapper {
   padding: 0.35rem 0.85rem;
   border-radius: 16px;
   border: 1px solid var(--border-soft);
@@ -501,22 +498,12 @@ body {
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
- 
-#export-format{
+
+#export-format {
   border: none;
   background: var(--surface-alt);
   width: 100%;
 }
-
-/* #download-button{
-  padding: 0.55rem 1.05rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-soft);
-  background: var(--surface-alt);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
-} */
 
 @media (max-width: 1280px) {
   .app-body {

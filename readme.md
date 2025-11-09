@@ -1,93 +1,86 @@
-# DrawBoard – Collaborative Canvas
+# Collaborative Canvas – Split Deployment Setup
 
-DrawBoard is a lightweight, real-time whiteboard that lets multiple users sketch together on an HTML5 canvas. The app focuses on low-latency interactions, resilient session state, and a modern, material-inspired UI that stays consistent across screen sizes.
+This repository now holds two independent deployable packages so you can host the frontend on Vercel and the realtime backend on Render. Each folder is ready to be pushed to its own GitHub repository.
 
-## 🧩 Tech Stack
+## Repository layout
 
-| Layer | Technology | Purpose |
-| --- | --- | --- |
-| Runtime | **Node.js** | Hosts the collaboration server and serves static assets |
-| Server Framework | **Express 4** | Serves the client bundle and exposes the Socket.IO endpoint |
-| Real-time Transport | **Socket.IO 4** | Broadcasts drawing segments, undo/redo commands, cursor presence, and display-name updates |
-| Client Application | **Vanilla ES Modules (HTML, CSS, JavaScript)** | Renders the UI, handles input tools, and manages socket events |
-| Development Tooling | **Nodemon 3** | Provides automatic restarts during development |
+```
+.
+├── frontend/                # Static client for Vercel (plain HTML/CSS/JS)
+│   ├── index.html
+│   ├── canvas.js
+│   ├── main.js
+│   ├── websocket.js
+│   ├── style.css
+│   └── app-config.js        # Runtime configuration (edit per environment)
+├── server/                  # Node.js + Socket.IO backend for Render
+│   ├── server.js
+│   ├── drawing-state.js
+│   ├── rooms.js
+│   ├── package.json
+│   └── README.md
+├── ARCHITECTURE.md          # Design notes (updated to reference split hosting)
+└── README.md (this file)
+```
 
-No frontend frameworks are used—the UI is entirely hand-written HTML/CSS with a small JS controller layer.
+## How to create the two GitHub repositories
 
-## ✨ Core Features
+1. **Frontend repo**
+	- Create a new repository (e.g. `collaborative-canvas-frontend`).
+	- Copy the contents of `frontend/` into that repository.
+	- Update `frontend/app-config.js` so `backendUrl` points at your Render URL. Commit the change.
 
-- **Responsive drawing tools**: Brush and eraser with smoothed quadratic-curve rendering and adjustable stroke width/color.
-- **Global history management**: Undo/redo stack tracked on the server to keep clients in sync.
-- **Resettable sessions**: A shared reset action clears the canvas (including background color) for every connected user and persists across reloads.
-- **Live collaborator presence**: Cursor positions, color-coded avatars, and a user roster update continuously.
-- **Display name updates**: Users can rename themselves with optimistic UI feedback and server-side validation.
-- **Material-inspired UI**: Rounded cards, light palette, and consistent layout for control and presence panels.
+2. **Server repo**
+	- Create a second repository (e.g. `collaborative-canvas-server`).
+	- Copy the contents of `server/` into that repository.
+	- Add an `.env` file (based on `.env.example`) with `ALLOWED_ORIGINS=<your Vercel URL>`.
 
-## 🚀 Getting Started
+Both directories include their own `package.json` files, so the repos stay completely isolated.
+
+## Local development workflow
 
 ```bash
+# Terminal 1 – backend
+cd server
 npm install
 npm run dev
+
+# Terminal 2 – frontend
+cd frontend
+npx serve .
+# or python3 -m http.server 4173
 ```
 
-The `dev` script starts the Express/Socket.IO server with Nodemon at [`http://localhost:3000`](http://localhost:3000) and serves the static client from `client/`.
+Update `frontend/app-config.js` to use `http://localhost:3000` (or whatever port the backend is listening on).
 
-For a production-style process (no hot reload):
+## Deploying to Vercel (frontend)
 
-```bash
-npm start
-```
+1. Connect the frontend GitHub repository to Vercel.
+2. Use the following project settings:
+   - **Framework preset**: `Other`
+   - **Build command**: leave empty (static export)
+   - **Output directory**: `.`
+3. Ensure `app-config.js` contains the production Render URL before pushing.
 
-### Testing Multiple Clients
+## Deploying to Render (backend)
 
-1. Run the server (dev or start).
-2. Open `http://localhost:3000` in your default browser.
-3. Open the same URL in another browser profile or an incognito/private window.
-4. Draw, undo/redo, rename, or reset the canvas in one window and watch the changes mirror instantly in all sessions.
+1. Create a new **Web Service**.
+2. Build command: `npm install`
+3. Start command: `npm start`
+4. Add environment variables:
+	- `ALLOWED_ORIGINS=https://<your-vercel-domain>` (comma-separated if multiple)
+5. Enable WebSockets in the Render service settings.
 
-## 🗂️ Project Structure
+Render automatically supplies the `PORT` variable; the server will use it when present.
 
-```
-drawBoard/
-├── client/
-│   ├── index.html          # Layout shell and control panels
-│   ├── style.css           # Material-inspired theme + responsive tweaks
-│   ├── canvas.js           # Canvas rendering, smoothing, and background management
-│   ├── websocket.js        # Socket.IO client wrapper and emit helpers
-│   └── main.js             # UI coordination & state management
-├── server/
-│   ├── server.js           # Express + Socket.IO server, reset handling
-│   ├── drawing-state.js    # Shared history store with undo/redo/clear APIs
-│   └── rooms.js            # Lightweight user registry
-├── ARCHITECTURE.md         # Deep dive into event flow and design decisions
-├── package.json
-└── README.md
-```
+## Feature summary
 
-## 🔧 Available Scripts
+- Real-time brush & eraser with stroke smoothing
+- Undo/redo and shared canvas resets
+- Cursor presence with live collaborator list
+- Export to PNG, JPEG, or SVG
+- Customisable display names with server-side validation
 
-- `npm run dev` – Start the server with Nodemon for auto-restart during development.
-- `npm start` – Launch the server with plain Node.js.
+Refer to `ARCHITECTURE.md` for a deep dive into the event flow and module responsibilities.
 
-## 🧠 Implementation Notes
-
-- **Canvas background**: The canvas surface respects the CSS custom property `--canvas-background` on `.canvas-container`. The shared reset action stores and re-applies this color so the canvas stays filled after reloads.
-- **Eraser behavior**: Eraser strokes repaint with the current background color for consistent exports instead of leaving transparent pixels.
-- **Networking**: All clients join a single Socket.IO “global” room. Events include drawing segments, stroke completions, undo/redo, cursor updates, name changes, and canvas clears.
-- **Resilience**: Display name updates and canvas resets use acknowledgement callbacks plus timeouts to provide reliable UX feedback.
-
-## ⚠️ Limitations & Future Ideas
-
-- Only one shared room is available; multi-room support would require namespace or room management.
-- The in-memory history can grow large over long sessions. Implementing pruning or persistence would improve scalability.
-- Offline strokes drawn during network interruptions aren’t replayed when the connection resumes.
-- There is no authentication—anyone with the URL can join the shared session.
-
-## 📚 Additional Docs
-
-Refer to `ARCHITECTURE.md` for a deeper look at module responsibilities, socket event payloads, and rendering details.
-
----
-
-Happy drawing! Contributions, issue reports, or design suggestions are always welcome.
-# Collaborative-Canvas
+Happy drawing!

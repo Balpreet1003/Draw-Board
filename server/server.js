@@ -1,4 +1,3 @@
-const path = require("path");
 const http = require("http");
 const express = require("express");
 const { Server } = require("socket.io");
@@ -6,14 +5,7 @@ const { DrawingState } = require("./drawing-state");
 const { RoomRegistry } = require("./rooms");
 
 const PORT = process.env.PORT || 3000;
-const CLIENT_DIR = path.resolve(__dirname, "..", "client");
-const SOCKET_CLIENT_DIR = path.resolve(
-  __dirname,
-  "..",
-  "node_modules",
-  "socket.io-client",
-  "dist"
-);
+const allowedOrigins = parseAllowedOrigins("http://localhost:62685");
 const GLOBAL_ROOM = "global";
 const DEFAULT_CANVAS_BACKGROUND = "#ffffff";
 
@@ -21,10 +13,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   transports: ["websocket", "polling"],
+  cors: buildCorsOptions(allowedOrigins),
 });
 
-app.use(express.static(CLIENT_DIR));
-app.use("/vendor", express.static(SOCKET_CLIENT_DIR));
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 const drawingState = new DrawingState();
 const rooms = new RoomRegistry();
@@ -92,8 +86,7 @@ io.on("connection", (socket) => {
       emitDisplayNameResult(socket, { ok: false, error: result.error });
       return;
     }
-
-  const updatedUser = rooms.updateUser(roomId, socket.id, { label: result.value });
+    const updatedUser = rooms.updateUser(roomId, socket.id, { label: result.value });
     if (!updatedUser) {
       const errorMessage = "User not found.";
       if (typeof ack === "function") {
@@ -267,6 +260,26 @@ function start(listenPort = PORT) {
     // eslint-disable-next-line no-console
     console.log(`Collaborative canvas server running at http://localhost:${listenPort}`);
   });
+}
+
+function parseAllowedOrigins(rawOrigins) {
+  if (!rawOrigins) {
+    return [];
+  }
+  return rawOrigins
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildCorsOptions(origins) {
+  if (!Array.isArray(origins) || origins.length === 0) {
+    return { origin: true };
+  }
+  if (origins.includes("*")) {
+    return { origin: true };
+  }
+  return { origin: origins, credentials: true };
 }
 
 if (require.main === module) {
