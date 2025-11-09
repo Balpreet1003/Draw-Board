@@ -1,0 +1,17 @@
+{
+  "name": "balpreetCanvas",
+  "version": "1.0.0",
+  "description": "High-performance real-time collaborative drawing canvas",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

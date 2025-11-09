@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Collaborative Canvas</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="app-body">
+        <aside class="panel-card panel-card--surface" aria-label="Canvas controls">
+          <div class="column-stack control-panel">
+            <section class="profile-card control-card">
+              <h2>Tools</h2>
+              <div class="tool-grid">
+                <button id="tool-brush" class="tool-button" data-tool="brush" type="button">
+                  <span>Brush</span>
+                </button>
+                <button id="tool-eraser" class="tool-button" data-tool="eraser" type="button">
+                  <span>Eraser</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="profile-card control-card">
+              <h2>Color</h2>
+              <div class="field-row">
+                <input id="stroke-color" type="color" value="#000000" aria-label="Stroke color" />
+                <div class="color-preview" aria-hidden="true">
+                  <span id="color-preview-value">#000000</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="profile-card control-card">
+              <h2>Stroke</h2>
+              <div class="range-field">
+                <label for="stroke-width">Width</label>
+                <input id="stroke-width" type="range" min="1" max="50" value="4" />
+                <span id="stroke-width-value">4 px</span>
+              </div>
+            </section>
+
+            <section class="profile-card control-card">
+              <h2>History</h2>
+              <div class="history-actions">
+                <button id="undo-button" class="ghost-button" type="button">Undo</button>
+                <button id="redo-button" class="ghost-button" type="button">Redo</button>
+                <button id="reset-button" class="ghost-button ghost-button--danger" type="button">
+                  Reset
+                </button>
+              </div>
+            </section>
+            
+            <section class="profile-card control-card" aria-label="Export">
+              <h2>Export</h2>
+              <div class="history-actions">
+                <label for="export-format" class="profile-label" style="display: flex; align-items: center;">Format</label>
+                <div class="ghost-button">
+                  <select id="export-format"  aria-label="Export format">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="svg">SVG</option>
+                  </select>
+                </div>
+                <button id="download-button" class="ghost-button" type="button">Download</button>
+              </div>
+              <p class="name-feedback" id="export-feedback" role="status" aria-live="polite"></p>
+            </section>
+          </div>
+        </aside>
+
+        <main class="workspace">
+          <div class="canvas-container">
+            <canvas id="drawing-canvas" width="1280" height="720"></canvas>
+            <div id="cursor-layer" aria-hidden="true"></div>
+          </div>
+
+          <aside class="panel-card panel-card--alt" aria-label="Online users and profile">
+            <div class="column-stack presence-column">
+              <section class="profile-card presence-card" aria-label="Your profile">
+                <div class="profile-summary">
+                  <span class="profile-color" id="self-color" aria-hidden="true"></span>
+                  <div class="profile-meta">
+                    <p class="profile-label">Signed in as</p>
+                    <p class="profile-name" id="profile-name">Connecting…</p>
+                  </div>
+                </div>
+                <form id="display-name-form" class="name-form" aria-label="Change your display name">
+                  <input
+                    id="display-name-input"
+                    type="text"
+                    inputmode="text"
+                    minlength="2"
+                    maxlength="32"
+                    autocomplete="off"
+                    placeholder="Choose a display name"
+                    aria-label="Display name"
+                  />
+                </form>
+                <p class="name-feedback" id="name-feedback" role="status" aria-live="polite"></p>
+              </section>
+
+              <section class="sheet-id-container" style="gap: 2px;" aria-label="Sheet information">
+                <div>
+                  <div class="profile-label" aria-label="Sheet id">
+                    Sheet ID: 
+                  </div>
+                  <strong id="sheet-id-value" class="name-form">—</strong>
+                </div>
+                <button id="copy-sheet-id" class="copy-sheet-id-btn" type="button" aria-label="Copy sheet ID to clipboard">
+                  Copy
+                </button>
+              </section>
+
+              <section class="profile-card presence-card" aria-label="Collaborators">
+                  <div class="presence-meta" aria-label="Collaborator count">
+                    <span class="user-count-pill"><span id="user-count">0</span> online</span>
+                  </div>
+                  <div id="online-users" class="user-list"></div>
+              </section>
+            </div>
+          </aside>
+        </main>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
