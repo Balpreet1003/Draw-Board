@@ -5,7 +5,7 @@ const { DrawingState } = require("./drawing-state");
 const { RoomRegistry } = require("./rooms");
 
 const PORT = process.env.PORT || 3000;
-const allowedOrigins = parseAllowedOrigins("drawboardcanvasclient.vercel.app");
+const allowedOrigins = parseAllowedOrigins("draw-board-canvas.vercel.app");
 const GLOBAL_ROOM = "global";
 const DEFAULT_CANVAS_BACKGROUND = "#ffffff";
 
@@ -138,7 +138,7 @@ function broadcastUserList(roomId = GLOBAL_ROOM) {
   // This will print lines like: user_list_update -> room=abc count= 2 ids= [ 'abc123', 'def456' ]
   // Remove or tone down this logging once the issue is resolved.
   // eslint-disable-next-line no-console
-  // console.log("user_list_update -> room=", roomId, "count=", list.length, "ids=", list.map((u) => u.id));
+  console.log("user_list_update -> room=", roomId, "count=", list.length, "ids=", list.map((u) => u.id));
   io.to(roomId).emit("user_list_update", list);
 }
 
